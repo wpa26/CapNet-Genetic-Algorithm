@@ -5,15 +5,18 @@
 
 #define NUM_GENS 10
 #define NUM_ORGANISMS 100
+#define CHROM_MASK 0x7FFFFFF
 
 
 float probCrossover = 0.25;
 float probPoint = 0.01;
-int numCaps = 5;
+int numCaps = 5; //maximum number of caps
 float caps[] = { 100, 150, 220, 330, 470, 680, 1000 }; //caps in picofarads
 float goalCap = 425; //Goal capacitance in picofards
 
-typedef long int chromosome;
+
+// (((C1 op (((C2) op ((C3)) op (C4))) op C5)))
+typedef int chromosome; //chromosome takes up 27 bits in 5 
 
 typedef struct Organisms {
 	chromosome genes;
@@ -30,7 +33,7 @@ Organism bestSolution;
 
 chromosome generateChromosome(){
 	chromosome genes;
-
+	genes = rand() & CHROM_MASK;
 	return genes;
 }
 
@@ -92,7 +95,9 @@ int main(){
 		for(j = 0; j < NUM_ORGANISMS; j += 2){
 			//Get parent 1
 			//Generate random number between 0 and roulette wheel length
-			dartThrow = fmod(rand(), rouletteWheelLength);
+			//https://stackoverflow.com/a/13409133
+			//Possibly make this better
+			dartThrow = (float)rand()/(float)(RAND_MAX/rouletteWheelLength);
 			//Find where the dart lands
 			for (int k = 0; k < NUM_ORGANISMS; ++k) {
 				if(dartThrow >= parents[k].lowerBound && dartThrow < parents[k].upperBound){
@@ -102,7 +107,7 @@ int main(){
 			}
 			//Get parent 2, allow for same parent twice
 			//Generate random number between 0 and roulette wheel length
-			dartThrow = fmod(rand(), rouletteWheelLength);
+			dartThrow = (float)rand()/(float)(RAND_MAX/rouletteWheelLength);
 			//Find where the dart lands
 			for (int k = 0; k < NUM_ORGANISMS; ++k) {
 				if(dartThrow >= parents[k].lowerBound && dartThrow < parents[k].upperBound){

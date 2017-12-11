@@ -3,8 +3,10 @@
 #include <stdlib.h>
 #include <time.h>
 
-int numGens = 10;
-int numOrganisms = 100;
+#define NUM_GENS 10
+#define NUM_ORGANISMS 100
+
+
 float probCrossover = 0.25;
 float probPoint = 0.01;
 int numCaps = 5;
@@ -22,8 +24,8 @@ typedef struct Organisms {
 } Organism;
 
 
-Organism parents[numOrganisms];
-Organism children[numOrganisms];
+Organism parents[NUM_ORGANISMS];
+Organism children[NUM_ORGANISMS];
 Organism bestSolution;
 
 chromosome generateChromosome(){
@@ -58,15 +60,15 @@ main(){
 	srand((unsigned)time(NULL));
 	bestSolution.fitness = 0;
 	//Generate Populations
-	for(i = 0; i < numOrganisms; ++i){
+	for(i = 0; i < NUM_ORGANISMS; ++i){
 		//Randomly generate genes
 		parents[i].genes = generateChromosome();
 	}
 	//Run Generations
-	for (i = 0; i < numGens; ++i) {
+	for (i = 0; i < NUM_GENS; ++i) {
 		rouletteWheelLength = 0;
 		//Each Organism has a start and end on roulette wheel
-		for(j = 0; j < numOrganisms; ++j){
+		for(j = 0; j < NUM_ORGANISMS; ++j){
 			//Determine Fitness and start and end
 			parents[j].value = calculateCapacitance(parents[j].genes);
 			parents[j].fitness = fitnessFunction(parents[j].value);
@@ -81,7 +83,7 @@ main(){
 		float dartThrow;
 		Organism * parent1;
 		Organism * parent2;
-		for(j = 0; j < numOrganisms; j += 2){
+		for(j = 0; j < NUM_ORGANISMS; j += 2){
 			//Generate random number between 0 and roulette wheel length
 			dartThrow = fmod(rand(), rouletteWheelLength);
 			//Find where the dart lands
@@ -104,7 +106,7 @@ main(){
 		}
 		//Make children next generation's parents
 		//Unoptimized version
-		for(j = 0; j < numOrganisms; j++){
+		for(j = 0; j < NUM_ORGANISMS; j++){
 			parents[j].genes = child[j].genes;
 		}
 	}

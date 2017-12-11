@@ -13,7 +13,7 @@ int numCaps = 5;
 float caps[] = { 100, 150, 220, 330, 470, 680, 1000 }; //caps in picofarads
 float goalCap = 425; //Goal capacitance in picofards
 
-
+typedef long int chromosome;
 
 typedef struct Organisms {
 	chromosome genes;
@@ -36,7 +36,7 @@ chromosome generateChromosome(){
 
 float fitnessFunction(float capacitance){
 	float fitness;
-	float difference = abs(goalCap - capacitance);
+	float difference = fabs(goalCap - capacitance);
 	//Write this. Remeber that linear fitness may not best fit needs
 	return fitness;
 }
@@ -48,12 +48,16 @@ float calculateCapacitance(chromosome network){
 }
 
 void mate( Organism * parent1, Organism * parent2, Organism * child1, Organism * child2 ){
-	child1->genes = ;
-	child2->genes = ;
+	//child1->genes = ;
+	//child2->genes = ;
 	return;
 }
 
-main(){
+void printChromosome( Organism individual){
+	return;
+}
+
+int main(){
 	int i,j;
 	float rouletteWheelLength;
 	//http://www.dummies.com/programming/c/how-to-generate-random-numbers-in-c-programming/
@@ -83,33 +87,38 @@ main(){
 		float dartThrow;
 		Organism * parent1;
 		Organism * parent2;
+		// Make each of the children, two at a time
 		for(j = 0; j < NUM_ORGANISMS; j += 2){
+			//Get parent 1
 			//Generate random number between 0 and roulette wheel length
 			dartThrow = fmod(rand(), rouletteWheelLength);
 			//Find where the dart lands
-			for (int k = 0; k < count; ++k) {
+			for (int k = 0; k < NUM_ORGANISMS; ++k) {
 				if(dartThrow >= parents[k].lowerBound && dartThrow < parents[k].upperBound){
 					parent1 = &parents[k];
 					break;
 				}
 			}
+			//Get parent 2, allow for same parent twice
 			//Generate random number between 0 and roulette wheel length
 			dartThrow = fmod(rand(), rouletteWheelLength);
 			//Find where the dart lands
-			for (int k = 0; k < count; ++k) {
+			for (int k = 0; k < NUM_ORGANISMS; ++k) {
 				if(dartThrow >= parents[k].lowerBound && dartThrow < parents[k].upperBound){
 					parent2 = &parents[k];
 					break;
 				}
 			}
-			mate(parent1, parent2, &child[j], &child[j+1]);
+			mate(parent1, parent2, &children[j], &children[j+1]);
 		}
 		//Make children next generation's parents
 		//Unoptimized version
 		for(j = 0; j < NUM_ORGANISMS; j++){
-			parents[j].genes = child[j].genes;
+			parents[j].genes = children[j].genes;
 		}
 	}
+	//Print out solution
+	printChromosome(bestSolution);
 
 
 

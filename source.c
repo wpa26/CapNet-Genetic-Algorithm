@@ -37,7 +37,8 @@ chromosome generateChromosome(){
 float fitnessFunction(float capacitance){
 	float fitness;
 	float difference = fabs(goalCap - capacitance);
-	//Write this. Remeber that linear fitness may not best fit needs
+	//Test different functions Remember that linear fitness may not best fit needs
+	fitness = 1.0 / difference;
 	return fitness;
 }
 

@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <float.h>
+#include "tinyexpr.h"
 
-#define NUM_GENS 10
+#define NUM_GENS 100
 #define NUM_ORGANISMS 100
 #define CHROM_MASK 0xFFFFFFF
 #define GENE_LENGTH 28
@@ -62,10 +63,13 @@ float fitnessFunction(float capacitance){
 	return fitness;
 }
 
-float calculateCapacitance(chromosome network){
+
+
+
+float calculateCapacitance(){
 	float capacitance;
 	// Decode genes into network and calculate value
-	// Choose unmatched parenthesis based on hamming code
+	capacitance = te_interp(expressionString,0);
 	return capacitance;
 }
 
@@ -112,7 +116,7 @@ void printChromosome( Organism individual ){
 	for(i = 0; i < 42;++i){
 		expressionString[i] = ' ';
 	}
-	string[42] = '\0';
+	expressionString[42] = '\0';
 	if(CHECK_BIT(gene,0)){
 		expressionString[0] = '(';
 		expressionString[33] = ')';
@@ -172,20 +176,20 @@ void printChromosome( Organism individual ){
 			expressionString[opStringIndex[j]] = '|'; //0 is parallel
 		}
 	}
-
-
-	printf("%s\n",expressionString);
+	//printf("%s\n",expressionString);
 	return;
 }
 
 int main(){
-	Organism example;
+	/*Organism example;
 	example.genes = 0b0101010101000111001101001110;
 	printChromosome(example);
+	printf("%f\n",calculateCapacitance());
 	example.genes = 0b1111111111111111111111111111;
 	printChromosome(example);
+	printf("%f\n",calculateCapacitance());*/
 
-	/*int i,j;
+	int i,j;
 	float rouletteWheelLength;
 	//http://www.dummies.com/programming/c/how-to-generate-random-numbers-in-c-programming/
 	srand((unsigned)time(NULL));
@@ -202,10 +206,11 @@ int main(){
 		//Each Organism has a start and end on roulette wheel
 		for(j = 0; j < NUM_ORGANISMS; ++j){
 			//Determine Fitness and start and end
-			parents[j].value = calculateCapacitance(parents[j].genes);
+			printChromosome(parents[j]);
+			parents[j].value = calculateCapacitance();
 			parents[j].fitness = fitnessFunction(parents[j].value);
 			if(parents[j].fitness == 0){
-				printChromosome(parents[j]);
+				printf("%s\n",expressionString);
 			}
 			if(parents[j].fitness > bestGlobalSolution.fitness){
 				bestGlobalSolution = parents[j];
@@ -252,10 +257,14 @@ int main(){
 		for(j = 0; j < NUM_ORGANISMS; j++){
 			parents[j].genes = children[j].genes;
 		}
+		printChromosome(bestGenerationalSolution);
+		printf("The best chromosome this gen (%d) is %s,with capacitance %f\n",i,expressionString,calculateCapacitance());
+	
 	}
 	//Print out solution
 	printChromosome(bestGlobalSolution);
-	*/
+	printf("The best chromosome is %s,with capacitance %f\n",expressionString,calculateCapacitance());
+	
 
 
 }

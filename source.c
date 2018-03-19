@@ -20,6 +20,8 @@ int opIndex[] = {6, 13, 19, 24};
 int opStringIndex[] = {7, 16, 25, 34};
 float goalCap = 425; //Goal capacitance in picofards
 
+char expressionString[100];
+
 
 // (((C1 op (((C2) op ((C3)) op (C4))) op C5)))
 // Ok never mind we only need to use half the parenthesis
@@ -92,7 +94,6 @@ void mate( Organism * parent1, Organism * parent2, Organism * child1, Organism *
 			child1->genes += temp2;
 			child2->genes += temp1;
 		}
-
 		flipper = flipper << 1;
 		mask = (mask << 1) + 1;
 	}
@@ -100,7 +101,6 @@ void mate( Organism * parent1, Organism * parent2, Organism * child1, Organism *
 }
 
 void printChromosome( Organism individual ){
-	char string[100];
 	char temp[5];
 	int length = 0;
 	int longest_cap = 4;
@@ -110,44 +110,44 @@ void printChromosome( Organism individual ){
 	chromosome index;
 	int i,j;
 	for(i = 0; i < 42;++i){
-		string[i] = ' ';
+		expressionString[i] = ' ';
 	}
 	string[42] = '\0';
 	if(CHECK_BIT(gene,0)){
-		string[0] = '(';
-		string[33] = ')';
+		expressionString[0] = '(';
+		expressionString[33] = ')';
 	}
 	if(CHECK_BIT(gene,1)){
-		string[1] = '(';
-		string[24] = ')';
+		expressionString[1] = '(';
+		expressionString[24] = ')';
 	}
 	if(CHECK_BIT(gene,2)){
-		string[2] = '(';
-		string[15] = ')';
+		expressionString[2] = '(';
+		expressionString[15] = ')';
 	}
 	if(CHECK_BIT(gene,7)){
-		string[8] = '(';
-		string[41] = ')';
+		expressionString[8] = '(';
+		expressionString[41] = ')';
 	}
 	if(CHECK_BIT(gene,8)){
-		string[9] = '(';
-		string[32] = ')';
+		expressionString[9] = '(';
+		expressionString[32] = ')';
 	}
 	if(CHECK_BIT(gene,9)){
-		string[10] = '(';
-		string[23] = ')';
+		expressionString[10] = '(';
+		expressionString[23] = ')';
 	}
 	if(CHECK_BIT(gene,14)){
-		string[17] = '(';
-		string[40] = ')';
+		expressionString[17] = '(';
+		expressionString[40] = ')';
 	}
 	if(CHECK_BIT(gene,15)){
-		string[18] = '(';
-		string[31] = ')';
+		expressionString[18] = '(';
+		expressionString[31] = ')';
 	}
 	if(CHECK_BIT(gene,20)){
-		string[26] = '(';
-		string[39] = ')';
+		expressionString[26] = '(';
+		expressionString[39] = ')';
 	}
 	for(j = 0; j < 5; ++j){
 		index = (gene & (mask << capIndex[j]))>>capIndex[j];
@@ -155,26 +155,26 @@ void printChromosome( Organism individual ){
 			cap_val = caps[index - 1];
 			sprintf(temp,"%04.f",cap_val);
 			for(i = 0;i<4;++i){
-				string[stringIndex[j]+i] = temp[i];
+				expressionString[stringIndex[j]+i] = temp[i];
 			}
 		}
 		else{
 			for(i = 0;i<4;++i){
-				string[stringIndex[j]+i] = '0';
+				expressionString[stringIndex[j]+i] = '0';
 			}
 		}
 	}
 	for(j = 0; j < 4; ++j){
 		if(CHECK_BIT(gene, opIndex[j])){
-			string[opStringIndex[j]] = '+'; //1 is series
+			expressionString[opStringIndex[j]] = '+'; //1 is series
 		}
 		else{
-			string[opStringIndex[j]] = '|'; //0 is parallel
+			expressionString[opStringIndex[j]] = '|'; //0 is parallel
 		}
 	}
 
 
-	printf("%s\n",string);
+	printf("%s\n",expressionString);
 	return;
 }
 

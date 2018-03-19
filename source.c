@@ -2,13 +2,15 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <float.h>
 
 #define NUM_GENS 10
 #define NUM_ORGANISMS 100
-#define CHROM_MASK 0x7FFFFFF
+#define CHROM_MASK 0x1FFFFFFFF
+#define GENE_LENGTH 37
 
 
-float probCrossover = 0.25;
+float probCrossover = 0.0075; // 25% of any crossover
 float probPoint = 0.01;
 int numCaps = 5; //maximum number of caps
 float caps[] = { 100, 150, 220, 330, 470, 680, 1000 }; //caps in picofarads
@@ -16,24 +18,25 @@ float goalCap = 425; //Goal capacitance in picofards
 
 
 // (((C1 op (((C2) op ((C3)) op (C4))) op C5)))
-typedef int chromosome; //chromosome takes up 27 bits in 5 
+typedef long chromosome; //chromosome takes up 37 bits in 5
 
 typedef struct Organisms {
 	chromosome genes;
 	float value; //capacitance in picofarads
 	float fitness; //difference from goal
-	float lowerBound;
+	float lowerBound; 
 	float upperBound;
 } Organism;
 
 
 Organism parents[NUM_ORGANISMS];
 Organism children[NUM_ORGANISMS];
-Organism bestSolution;
+Organism bestGlobalSolution;
+Organism bestGenerationalSolution;
 
 chromosome generateChromosome(){
 	chromosome genes;
-	genes = rand() & CHROM_MASK;
+	genes = random() & CHROM_MASK;
 	return genes;
 }
 
@@ -41,23 +44,56 @@ float fitnessFunction(float capacitance){
 	float fitness;
 	float difference = fabs(goalCap - capacitance);
 	//Test different functions Remember that linear fitness may not best fit needs
-	fitness = 1.0 / difference;
+	if(difference == 0){
+		printf("Hey we found our guy!");
+		return 0;
+	}
+	else{
+		fitness = 1.0 / difference;
+	}
 	return fitness;
 }
 
 float calculateCapacitance(chromosome network){
 	float capacitance;
 	// Decode genes into network and calculate value
+	// Choose unmatched parenthesis based on hamming code
 	return capacitance;
 }
 
 void mate( Organism * parent1, Organism * parent2, Organism * child1, Organism * child2 ){
-	//child1->genes = ;
-	//child2->genes = ;
+	int i;
+	child1->genes = parent1->genes;
+	child2->genes = parent2->genes;
+	float dieRoll;
+	chromosome flipper = 1;
+	chromosome mask = 1;
+	chromosome temp1;
+	chromosome temp2;
+	for(i = 0; i < GENE_LENGTH; ++i){
+		dieRoll = (float)rand()/(float)(RAND_MAX);
+		if( dieRoll <= probPoint ){
+			child1->genes ^= flipper;
+		}
+		dieRoll = (float)rand()/(float)(RAND_MAX);
+		if( dieRoll <= probPoint){
+			child2->genes ^= flipper;
+		}
+		dieRoll = (float)rand()/(float)(RAND_MAX);
+		if( dieRoll <= probCrossover){
+			temp1 = child1->genes & mask;
+			temp2 = child2->genes & mask;
+			child1->genes += temp2;
+			child2->genes += temp1;
+		}
+
+		flipper = flipper << 1;
+		mask = (mask << 1) + 1;
+	}
 	return;
 }
 
-void printChromosome( Organism individual){
+void printChromosome( Organism individual ){
 	return;
 }
 
@@ -66,7 +102,7 @@ int main(){
 	float rouletteWheelLength;
 	//http://www.dummies.com/programming/c/how-to-generate-random-numbers-in-c-programming/
 	srand((unsigned)time(NULL));
-	bestSolution.fitness = 0;
+	bestGlobalSolution.fitness = 0;
 	//Generate Populations
 	for(i = 0; i < NUM_ORGANISMS; ++i){
 		//Randomly generate genes
@@ -75,13 +111,20 @@ int main(){
 	//Run Generations
 	for (i = 0; i < NUM_GENS; ++i) {
 		rouletteWheelLength = 0;
+		bestGenerationalSolution.fitness = 0;
 		//Each Organism has a start and end on roulette wheel
 		for(j = 0; j < NUM_ORGANISMS; ++j){
 			//Determine Fitness and start and end
 			parents[j].value = calculateCapacitance(parents[j].genes);
 			parents[j].fitness = fitnessFunction(parents[j].value);
-			if(parents[j].fitness > bestSolution.fitness){
-				bestSolution = parents[j];
+			if(parents[j].fitness == 0){
+				printChromosome(parents[j]);
+			}
+			if(parents[j].fitness > bestGlobalSolution.fitness){
+				bestGlobalSolution = parents[j];
+			}
+			if(parents[j].fitness > bestGenerationalSolution.fitness){
+				bestGenerationalSolution = parents[j];
 			}
 			parents[j].lowerBound = rouletteWheelLength;
 			parents[j].upperBound = rouletteWheelLength + parents[j].fitness;
@@ -124,7 +167,7 @@ int main(){
 		}
 	}
 	//Print out solution
-	printChromosome(bestSolution);
+	printChromosome(bestGlobalSolution);
 
 
 

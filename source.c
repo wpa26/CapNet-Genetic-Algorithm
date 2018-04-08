@@ -5,36 +5,41 @@
 #include <float.h>
 #include "tinyexpr.h"
 
+// Parameters
 #define NUM_GENS 100
-#define NUM_ORGANISMS 100
+#define NUM_ORGANISMS 1000
+
+// Internal Variables and macros
 #define CHROM_MASK 0xFFFFFFF
 #define GENE_LENGTH 28
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 
-float probCrossover = 0.0075; // 25% of any crossover
-float probPoint = 0.01;
-int numCaps = 5; //maximum number of caps
-float caps[] = { 100, 150, 220, 330, 470, 680, 1000 }; //caps in picofarads
-int capIndex[] = {3,10,16,21,25};
-int stringIndex[] = {3, 11, 19, 27, 35};
-int opIndex[] = {6, 13, 19, 24};
-int opStringIndex[] = {7, 16, 25, 34};
-float goalCap = 425; //Goal capacitance in picofards
 
+// Parameters
+float probCrossover = 0.0075; // 25% of any crossover
+float probPoint = 0.01; //Probability of point mutation
+int numCaps = 5; //maximum number of caps
+float caps[] = { 100, 150, 220, 330, 470, 680, 1000 }; //availible caps in picofarads
+float goalCap = 578; //Goal capacitance in picofards
+
+// Internal Varibales
+const int capIndex[] = {3,10,16,21,25}; //
+const int stringIndex[] = {3, 11, 19, 27, 35};
+const int opIndex[] = {6, 13, 19, 24};
+const int opStringIndex[] = {7, 16, 25, 34};
 char expressionString[100];
 
-
+// Chromosome encoding
 // (((C1 op (((C2) op ((C3)) op (C4))) op C5)))
-// Ok never mind we only need to use half the parenthesis
-// So only open parenthesis are encoded
-typedef int chromosome; //chromosome takes up 37 bits in 5
+// Only open parenthesis is actually encoded, matching parenthesis implied
+typedef int chromosome; //chromosome takes up 28 bits with 5 caps
 
 typedef struct Organisms {
-	chromosome genes;
+	chromosome genes; //Encoded network
 	float value; //capacitance in picofarads
 	float fitness; //difference from goal
-	float lowerBound; 
-	float upperBound;
+	float lowerBound; //beginning of place on roulette wheel
+	float upperBound; //end of place on roulete wheel
 } Organism;
 
 
@@ -43,18 +48,21 @@ Organism children[NUM_ORGANISMS];
 Organism bestGlobalSolution;
 Organism bestGenerationalSolution;
 
+//Randomly generates a chromosome to encode a network
 chromosome generateChromosome(){
 	chromosome genes;
 	genes = random() & CHROM_MASK;
 	return genes;
 }
 
+//Returns fitness of a given organism, based on capacitance
+//Note, this could be improved by taking into account number of
+//caps, as the fewer the caps the better
 float fitnessFunction(float capacitance){
 	float fitness;
 	float difference = fabs(goalCap - capacitance);
-	//Test different functions Remember that linear fitness may not best fit needs
 	if(difference == 0){
-		printf("Hey we found our guy!");
+		printf("We found a perfect network");
 		return 0;
 	}
 	else{
@@ -63,9 +71,8 @@ float fitnessFunction(float capacitance){
 	return fitness;
 }
 
-
-
-
+// Called to pass the expression string to the interpreter to calculate
+// capacitance.
 float calculateCapacitance(){
 	float capacitance;
 	// Decode genes into network and calculate value
@@ -73,24 +80,28 @@ float calculateCapacitance(){
 	return capacitance;
 }
 
+// Takes two parents and creates two offspring, with crossover and point mutation
 void mate( Organism * parent1, Organism * parent2, Organism * child1, Organism * child2 ){
 	int i;
-	child1->genes = parent1->genes;
+	child1->genes = parent1->genes; //just copy and then do work later
 	child2->genes = parent2->genes;
 	float dieRoll;
 	chromosome flipper = 1;
 	chromosome mask = 1;
 	chromosome temp1;
 	chromosome temp2;
+	//Go through each bit
 	for(i = 0; i < GENE_LENGTH; ++i){
+		// First point mutation for both organisms
 		dieRoll = (float)rand()/(float)(RAND_MAX);
 		if( dieRoll <= probPoint ){
-			child1->genes ^= flipper;
+			child1->genes ^= flipper; //flip point
 		}
 		dieRoll = (float)rand()/(float)(RAND_MAX);
 		if( dieRoll <= probPoint){
 			child2->genes ^= flipper;
 		}
+		// Next crossover
 		dieRoll = (float)rand()/(float)(RAND_MAX);
 		if( dieRoll <= probCrossover){
 			temp1 = child1->genes & mask;
@@ -98,12 +109,15 @@ void mate( Organism * parent1, Organism * parent2, Organism * child1, Organism *
 			child1->genes += temp2;
 			child2->genes += temp1;
 		}
+		//Update point mutation and crossover operands
 		flipper = flipper << 1;
 		mask = (mask << 1) + 1;
 	}
 	return;
 }
 
+//Creates expression string from genes.
+//Kind of a bad name, more like sprintfchromosome
 void printChromosome( Organism individual ){
 	char temp[5];
 	int length = 0;
@@ -176,24 +190,16 @@ void printChromosome( Organism individual ){
 			expressionString[opStringIndex[j]] = '|'; //0 is parallel
 		}
 	}
-	//printf("%s\n",expressionString);
 	return;
 }
 
 int main(){
-	/*Organism example;
-	example.genes = 0b0101010101000111001101001110;
-	printChromosome(example);
-	printf("%f\n",calculateCapacitance());
-	example.genes = 0b1111111111111111111111111111;
-	printChromosome(example);
-	printf("%f\n",calculateCapacitance());*/
-
 	int i,j;
 	float rouletteWheelLength;
 	//http://www.dummies.com/programming/c/how-to-generate-random-numbers-in-c-programming/
 	srand((unsigned)time(NULL));
 	bestGlobalSolution.fitness = 0;
+	
 	//Generate Populations
 	for(i = 0; i < NUM_ORGANISMS; ++i){
 		//Randomly generate genes
@@ -253,7 +259,6 @@ int main(){
 			mate(parent1, parent2, &children[j], &children[j+1]);
 		}
 		//Make children next generation's parents
-		//Unoptimized version
 		for(j = 0; j < NUM_ORGANISMS; j++){
 			parents[j].genes = children[j].genes;
 		}
@@ -264,7 +269,4 @@ int main(){
 	//Print out solution
 	printChromosome(bestGlobalSolution);
 	printf("The best chromosome is %s,with capacitance %f\n",expressionString,calculateCapacitance());
-	
-
-
 }

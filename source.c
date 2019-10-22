@@ -50,18 +50,13 @@ chromosome generateChromosome(){
 }
 
 //Returns fitness of a given organism, based on capacitance
-//Note, this could be improved by taking into account number of
-//caps, as the fewer the caps the better
-float fitnessFunction(float capacitance){
+// We treat 0 capacitance as no capacitor. Because it saves
+// space, the fewer capcitors we have the better
+float fitnessFunction(float capacitance, int num_caps){
 	float fitness;
 	float difference = fabs(goalCap - capacitance);
-	if(difference == 0){
-		printf("We found a perfect network");
-		return 0;
-	}
-	else{
-		fitness = 1.0 / difference;
-	}
+	difference *= (0.5 + num_caps/(float)numCaps);
+	fitness = 1.0 / difference;
 	return fitness;
 }
 
@@ -112,7 +107,8 @@ void mate( Organism * parent1, Organism * parent2, Organism * child1, Organism *
 
 //Creates expression string from genes.
 //Kind of a bad name, more like sprintfchromosome
-void printChromosome( Organism individual, char * expressionString ){
+//Also returns the number of capacitors
+int printChromosome( Organism individual, char * expressionString ){
 	const int capIndex[] = {3,10,16,21,25};
 	const int capStringIndex[] = {3, 11, 19, 27, 35};
 	const int opIndex[] = {6, 13, 19, 24};
@@ -123,6 +119,7 @@ void printChromosome( Organism individual, char * expressionString ){
 	char temp[5];
 	int length = 0;
 	int longest_cap = 4;
+	int num_caps = 0; 
 	float cap_val;
 	chromosome gene = individual.genes;
 	chromosome mask = 7;
@@ -141,6 +138,7 @@ void printChromosome( Organism individual, char * expressionString ){
 	for(j = 0; j < 5; ++j){
 		index = (gene & (mask << capIndex[j]))>>capIndex[j];
 		if(index){
+			num_caps++;
 			cap_val = caps[index - 1];
 			sprintf(temp,"%04.f",cap_val);
 			for(i = 0;i<4;++i){
@@ -161,7 +159,7 @@ void printChromosome( Organism individual, char * expressionString ){
 			expressionString[opStringIndex[j]] = '|'; //0 is parallel
 		}
 	}
-	return;
+	return num_caps;
 }
 
 int main(){
@@ -184,9 +182,9 @@ int main(){
 		//Each Organism has a start and end on roulette wheel
 		for(j = 0; j < NUM_ORGANISMS; ++j){
 			//Determine Fitness and start and end
-			printChromosome(parents[j], expressionString);
+			int num_caps = printChromosome(parents[j], expressionString);
 			parents[j].value = calculateCapacitance(expressionString);
-			parents[j].fitness = fitnessFunction(parents[j].value);
+			parents[j].fitness = fitnessFunction(parents[j].value, num_caps);
 
 			if(parents[j].fitness > bestGlobalSolution.fitness){
 				bestGlobalSolution = parents[j];

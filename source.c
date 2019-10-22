@@ -22,12 +22,6 @@ const int numCaps = 5; //maximum number of caps
 const float caps[] = { 100, 150, 220, 330, 470, 680, 1000 }; //availible caps in picofarads
 const float goalCap = 578; //Goal capacitance in picofards
 
-// Internal Varibales
-const int capIndex[] = {3,10,16,21,25}; //
-const int stringIndex[] = {3, 11, 19, 27, 35};
-const int opIndex[] = {6, 13, 19, 24};
-const int opStringIndex[] = {7, 16, 25, 34};
-char expressionString[100];
 
 // Chromosome encoding
 // (((C1 op (((C2) op ((C3)) op (C4))) op C5)))
@@ -118,7 +112,14 @@ void mate( Organism * parent1, Organism * parent2, Organism * child1, Organism *
 
 //Creates expression string from genes.
 //Kind of a bad name, more like sprintfchromosome
-void printChromosome( Organism individual ){
+void printChromosome( Organism individual, char * expressionString ){
+	const int capIndex[] = {3,10,16,21,25};
+	const int capStringIndex[] = {3, 11, 19, 27, 35};
+	const int opIndex[] = {6, 13, 19, 24};
+	const int opStringIndex[] = {7, 16, 25, 34};
+	const int paraIndex[] = {0,1,2,7,8,9,14,15,20};
+	const int openParaIndex[] = {0,1,2,8,9,10,17,18,26};
+	const int closeParaIndex[] = {33,24,15,41,32,23,40,31,39};
 	char temp[5];
 	int length = 0;
 	int longest_cap = 4;
@@ -131,41 +132,11 @@ void printChromosome( Organism individual ){
 		expressionString[i] = ' ';
 	}
 	expressionString[42] = '\0';
-	if(CHECK_BIT(gene,0)){
-		expressionString[0] = '(';
-		expressionString[33] = ')';
-	}
-	if(CHECK_BIT(gene,1)){
-		expressionString[1] = '(';
-		expressionString[24] = ')';
-	}
-	if(CHECK_BIT(gene,2)){
-		expressionString[2] = '(';
-		expressionString[15] = ')';
-	}
-	if(CHECK_BIT(gene,7)){
-		expressionString[8] = '(';
-		expressionString[41] = ')';
-	}
-	if(CHECK_BIT(gene,8)){
-		expressionString[9] = '(';
-		expressionString[32] = ')';
-	}
-	if(CHECK_BIT(gene,9)){
-		expressionString[10] = '(';
-		expressionString[23] = ')';
-	}
-	if(CHECK_BIT(gene,14)){
-		expressionString[17] = '(';
-		expressionString[40] = ')';
-	}
-	if(CHECK_BIT(gene,15)){
-		expressionString[18] = '(';
-		expressionString[31] = ')';
-	}
-	if(CHECK_BIT(gene,20)){
-		expressionString[26] = '(';
-		expressionString[39] = ')';
+	for(j = 0; j < 9; ++j){
+		if(CHECK_BIT(gene,paraIndex[j])){
+			expressionString[openParaIndex[j]] = '(';
+			expressionString[closeParaIndex[j]] = ')';
+		}
 	}
 	for(j = 0; j < 5; ++j){
 		index = (gene & (mask << capIndex[j]))>>capIndex[j];
@@ -173,12 +144,12 @@ void printChromosome( Organism individual ){
 			cap_val = caps[index - 1];
 			sprintf(temp,"%04.f",cap_val);
 			for(i = 0;i<4;++i){
-				expressionString[stringIndex[j]+i] = temp[i];
+				expressionString[capStringIndex[j]+i] = temp[i];
 			}
 		}
 		else{
 			for(i = 0;i<4;++i){
-				expressionString[stringIndex[j]+i] = '0';
+				expressionString[capStringIndex[j]+i] = '0';
 			}
 		}
 	}

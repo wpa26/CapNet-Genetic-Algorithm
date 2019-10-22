@@ -45,7 +45,7 @@ Organism bestGenerationalSolution;
 //Randomly generates a chromosome to encode a network
 chromosome generateChromosome(){
 	chromosome genes;
-	genes = random() & CHROM_MASK;
+	genes = rand() & CHROM_MASK;
 	return genes;
 }
 
@@ -55,13 +55,9 @@ chromosome generateChromosome(){
 float fitnessFunction(float capacitance){
 	float fitness;
 	float difference = fabs(goalCap - capacitance);
-	if(difference == 0){
-		printf("We found a perfect network");
-		return 0;
-	}
-	else{
-		fitness = 1.0 / difference;
-	}
+
+	fitness = numCaps * caps[numCaps-1] - difference;
+	
 	return fitness;
 }
 
@@ -168,10 +164,11 @@ int main(){
 	int i,j;
 	float rouletteWheelLength;
 	//http://www.dummies.com/programming/c/how-to-generate-random-numbers-in-c-programming/
-	srand((unsigned)time(NULL));
+	srand(time(NULL));
 	bestGlobalSolution.fitness = 0;
 	char expressionString[100];
 	
+	printf("Starting population is:\n");
 	//Generate Populations
 	for(i = 0; i < NUM_ORGANISMS; ++i){
 		//Randomly generate genes
@@ -187,6 +184,9 @@ int main(){
 			printChromosome(parents[j], expressionString);
 			parents[j].value = calculateCapacitance(expressionString);
 			parents[j].fitness = fitnessFunction(parents[j].value);
+			if(!i){
+				printf("%s,with capacitance %f\n",expressionString,parents[j].value);
+			}
 
 			if(parents[j].fitness > bestGlobalSolution.fitness){
 				bestGlobalSolution = parents[j];

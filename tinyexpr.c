@@ -219,7 +219,15 @@ static const te_variable *find_lookup(const state *s, const char *name, int len)
 
 
 
-static double add(double a, double b) {return 1/(1/a + 1/b);}
+static double add(double a, double b) {
+    if(a == 0){
+        return b;
+    }else if(b == 0){
+        return a;
+    }else{
+        return 1/(1/a + 1/b);
+    }
+}
 static double sub(double a, double b) {return a+b;}
 static double mul(double a, double b) {return a * b;}
 static double divide(double a, double b) {return a / b;}

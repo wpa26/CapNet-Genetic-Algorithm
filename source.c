@@ -15,12 +15,12 @@
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 
 
-// Parameters
-float probCrossover = 0.0075; // 25% of any crossover
-float probPoint = 0.01; //Probability of point mutation
-int numCaps = 5; //maximum number of caps
-float caps[] = { 100, 150, 220, 330, 470, 680, 1000 }; //availible caps in picofarads
-float goalCap = 578; //Goal capacitance in picofards
+// Compile-time Parameters
+const float probCrossover = 0.0075; // probility of any crossover is 25%
+const float probPoint = 0.01; //Probability of point mutation
+const int numCaps = 5; //maximum number of caps
+const float caps[] = { 100, 150, 220, 330, 470, 680, 1000 }; //availible caps in picofarads
+const float goalCap = 578; //Goal capacitance in picofards
 
 // Internal Varibales
 const int capIndex[] = {3,10,16,21,25}; //
@@ -34,10 +34,10 @@ char expressionString[100];
 // Only open parenthesis is actually encoded, matching parenthesis implied
 typedef int chromosome; //chromosome takes up 28 bits with 5 caps
 
-typedef struct Organisms {
+typedef struct {
 	chromosome genes; //Encoded network
 	float value; //capacitance in picofarads
-	float fitness; //difference from goal
+	float fitness; //calculated fitness (higher is more fit)
 	float lowerBound; //beginning of place on roulette wheel
 	float upperBound; //end of place on roulete wheel
 } Organism;
@@ -73,7 +73,7 @@ float fitnessFunction(float capacitance){
 
 // Called to pass the expression string to the interpreter to calculate
 // capacitance.
-float calculateCapacitance(){
+float calculateCapacitance(char * expressionString){
 	float capacitance;
 	// Decode genes into network and calculate value
 	capacitance = te_interp(expressionString,0);
@@ -199,6 +199,7 @@ int main(){
 	//http://www.dummies.com/programming/c/how-to-generate-random-numbers-in-c-programming/
 	srand((unsigned)time(NULL));
 	bestGlobalSolution.fitness = 0;
+	char expressionString[100];
 	
 	//Generate Populations
 	for(i = 0; i < NUM_ORGANISMS; ++i){
@@ -212,12 +213,10 @@ int main(){
 		//Each Organism has a start and end on roulette wheel
 		for(j = 0; j < NUM_ORGANISMS; ++j){
 			//Determine Fitness and start and end
-			printChromosome(parents[j]);
-			parents[j].value = calculateCapacitance();
+			printChromosome(parents[j], expressionString);
+			parents[j].value = calculateCapacitance(expressionString);
 			parents[j].fitness = fitnessFunction(parents[j].value);
-			if(parents[j].fitness == 0){
-				printf("%s\n",expressionString);
-			}
+
 			if(parents[j].fitness > bestGlobalSolution.fitness){
 				bestGlobalSolution = parents[j];
 			}
@@ -262,11 +261,11 @@ int main(){
 		for(j = 0; j < NUM_ORGANISMS; j++){
 			parents[j].genes = children[j].genes;
 		}
-		printChromosome(bestGenerationalSolution);
-		printf("The best chromosome this gen (%d) is %s,with capacitance %f\n",i,expressionString,calculateCapacitance());
+		printChromosome(bestGenerationalSolution,expressionString);
+		printf("The best chromosome this gen (%d) is %s,with capacitance %f\n",i,expressionString,calculateCapacitance(expressionString));
 	
 	}
 	//Print out solution
-	printChromosome(bestGlobalSolution);
-	printf("The best chromosome is %s,with capacitance %f\n",expressionString,calculateCapacitance());
+	printChromosome(bestGlobalSolution,expressionString);
+	printf("The best chromosome is %s,with capacitance %f\n",expressionString,calculateCapacitance(expressionString));
 }
